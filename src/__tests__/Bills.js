@@ -9,6 +9,7 @@ import { ROUTES_PATH } from "../constants/routes.js";
 import { localStorageMock } from "../__mocks__/localStorage.js";
 
 import router from "../app/Router.js";
+import Bills from "../containers/Bills.js";
 
 describe("Given I am connected as an employee", () => {
   describe("When I am on Bills Page", () => {
@@ -42,6 +43,29 @@ describe("Given I am connected as an employee", () => {
       const antiChrono = (a, b) => (a < b ? 1 : -1);
       const datesSorted = [...dates].sort(antiChrono);
       expect(dates).toEqual(datesSorted);
+    });
+    test("The eye icons should be visible", () => {
+      document.body.innerHTML = BillsUI({ data: bills });
+      const icons = screen.getAllByTestId("icon-eye");
+      expect(icons.length).toBeGreaterThan(0);
+    });
+    test("Then Bills object should be instanciated", () => {
+      const bills = new Bills({
+        document,
+        onNavigate,
+        store: null,
+        localStorage,
+      });
+      expect(bills).toBeTruthy();
+    });
+
+    test("When I click on new Bill, we should be redirected to newBill page", () => {
+      document.body.innerHTML = BillsUI({ data: bills });
+      const buttonNewBill = document.querySelector(
+        `button[data-testid="btn-new-bill"]`
+      );
+      buttonNewBill.click();
+      expect(onNavigate).toHaveBeenCalledWith(ROUTES_PATH.NewBill);
     });
   });
 });
