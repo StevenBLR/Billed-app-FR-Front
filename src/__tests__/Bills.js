@@ -31,7 +31,7 @@ describe("Given I am connected as an employee", () => {
       await bills.getBills();
       expect(spy).toHaveReturned();
     });
-
+  });
   describe("When I am on Bills Page", () => {
     test("Then bill icon in vertical layout should be highlighted", async () => {
       Object.defineProperty(window, "localStorage", {
