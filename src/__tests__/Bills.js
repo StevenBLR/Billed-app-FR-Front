@@ -4,14 +4,34 @@
 
 import { screen, waitFor } from "@testing-library/dom";
 import BillsUI from "../views/BillsUI.js";
+import userEvent from "@testing-library/user-event";
 import { bills } from "../fixtures/bills.js";
 import { ROUTES_PATH } from "../constants/routes.js";
 import { localStorageMock } from "../__mocks__/localStorage.js";
-
+import mockStore from "../__mocks__/store";
 import router from "../app/Router.js";
 import Bills from "../containers/Bills.js";
 
 describe("Given I am connected as an employee", () => {
+  describe("When I navigate to Bills", () => {
+    const bills = new Bills({
+      document: document,
+      onNavigate: router.onNavigate,
+      store: mockStore,
+      localStorage: localStorageMock,
+    });
+    test("The function getBill should be called", async () => {
+      const spy = jest.spyOn(bills, "getBills");
+      await bills.getBills();
+      expect(spy).toHaveBeenCalled();
+    });
+
+    test("The function getBill should return an array of bills", async () => {
+      const spy = jest.spyOn(bills, "getBills");
+      await bills.getBills();
+      expect(spy).toHaveReturned();
+    });
+
   describe("When I am on Bills Page", () => {
     test("Then bill icon in vertical layout should be highlighted", async () => {
       Object.defineProperty(window, "localStorage", {
@@ -59,13 +79,45 @@ describe("Given I am connected as an employee", () => {
       expect(bills).toBeTruthy();
     });
 
-    test("When I click on new Bill, we should be redirected to newBill page", () => {
-      document.body.innerHTML = BillsUI({ data: bills });
-      const buttonNewBill = document.querySelector(
-        `button[data-testid="btn-new-bill"]`
-      );
-      buttonNewBill.click();
-      expect(onNavigate).toHaveBeenCalledWith(ROUTES_PATH.NewBill);
+    describe("When I click on new Bill", () => {
+      // test("We should be redirected to newBill page", () => {
+      //   document.body.innerHTML = BillsUI({ data: bills });
+      //   const buttonNewBill = document.querySelector(
+      //     `button[data-testid="btn-new-bill"]`
+      //   );
+      //   buttonNewBill.click();
+      //   expect(onNavigate).toHaveBeenCalledWith(ROUTES_PATH.NewBill);
+      // });
+    });
+
+    describe("When I click on an eye icon button", () => {
+      test("The modal should show", () => {
+        const ui = BillsUI({ data: bills });
+        document.body.innerHTML = ui;
+
+        const onNavigate = (pathname) => {
+          document.body.innerHTML = ROUTES({ pathname });
+        };
+
+        const myBill = new Bills({
+          document,
+          onNavigate,
+          store: null,
+          localStorage: window.localStorage,
+        });
+        //mock boostrap .modal("show") function
+        $.fn.modal = jest.fn().mockImplementation(() => {
+          $("#modaleFile").css("display", "block");
+        });
+
+        const spy = jest.spyOn(myBill, "handleClickIconEye");
+        const icon = document.querySelector(`[data-testid="icon-eye"]`);
+        userEvent.click(icon);
+
+        const modal = document.getElementById("modaleFile");
+        expect(spy).toHaveBeenCalled();
+        expect(modal.style.display).toBe("block");
+      });
     });
   });
 });
