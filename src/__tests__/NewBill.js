@@ -106,5 +106,61 @@ describe("Given I am connected as an employee", () => {
         expect(handleSubmit).toHaveBeenCalled();
       });
     });
+
+    describe("When I change file input", () => {
+      test("It should reset file value if the file type is wrong", () => {
+        document.body.innerHTML = NewBillUI();
+
+        // Mock navigation
+        const onNavigate = (pathname) => {
+          document.body.innerHTML = ROUTES({ pathname });
+        };
+
+        const myNewBill = new NewBill({
+          document,
+          onNavigate,
+          mockStore,
+          localStorage: window.localStorage,
+        });
+
+        const spyFile = jest.spyOn(myNewBill, "handleChangeFile");
+
+        document
+          .querySelector(`input[data-testid="file"]`)
+          .addEventListener("change", spyFile);
+
+        const badFile = new File(["hello"], "hello.pdf", {
+          type: "application/pdf",
+        });
+        userEvent.upload(screen.getByTestId("file"), badFile);
+        expect(screen.getByTestId("file").value).toBe("");
+        expect(myNewBill.fileUrl).toBe(null);
+        expect(myNewBill.fileName).toBe(null);
+      });
+    });
+    test("It should load the file", () => {
+      document.body.innerHTML = NewBillUI();
+
+      const onNavigate = (pathname) => {
+        document.body.innerHTML = ROUTES({ pathname });
+      };
+      const myNewBill = new NewBill({
+        document,
+        onNavigate,
+        store: mockStore,
+        localStorage: window.localStorage,
+      });
+
+      const spyFile = jest.spyOn(myNewBill, "handleChangeFile");
+
+      document
+        .querySelector(`input[data-testid="file"]`)
+        .addEventListener("change", spyFile);
+      console.log("Store ---------->", myNewBill.store);
+      const file = new File(["hello"], "hello.png", { type: "image/png" });
+      userEvent.upload(screen.getByTestId("file"), file);
+      expect(spyFile).toHaveBeenCalled();
+      expect(screen.getByTestId("file").files[0]).toBe(file);
+    });
   });
 });
