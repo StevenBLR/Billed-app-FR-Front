@@ -24,7 +24,7 @@ describe("Given I am connected as an employee", () => {
     });
 
     describe("When I do fill correctly the fields and I click on submit button", () => {
-      test("It should renders Bills page", () => {
+      test("It should call handleSubmit Method", () => {
         document.body.innerHTML = NewBillUI();
         const inputData = {
           expenseType: "Transports",
@@ -101,9 +101,13 @@ describe("Given I am connected as an employee", () => {
         // Mock handleSubmit and check if it is called
         const handleSubmit = jest.fn(newBills.handleSubmit);
         newBills.handleSubmit = jest.fn().mockResolvedValue({});
+        const updateBilLSpy = jest.spyOn(newBills, "updateBill");
         form.addEventListener("submit", handleSubmit);
         fireEvent.submit(form);
         expect(handleSubmit).toHaveBeenCalled();
+
+        // Test if updateBill is called
+        expect(updateBilLSpy).toHaveBeenCalled();
       });
     });
 
@@ -137,30 +141,31 @@ describe("Given I am connected as an employee", () => {
         expect(myNewBill.fileUrl).toBe(null);
         expect(myNewBill.fileName).toBe(null);
       });
-    });
-    test("It should load the file", () => {
-      document.body.innerHTML = NewBillUI();
 
-      const onNavigate = (pathname) => {
-        document.body.innerHTML = ROUTES({ pathname });
-      };
-      const myNewBill = new NewBill({
-        document,
-        onNavigate,
-        store: mockStore,
-        localStorage: window.localStorage,
+      test("It should load the file", () => {
+        document.body.innerHTML = NewBillUI();
+
+        const onNavigate = (pathname) => {
+          document.body.innerHTML = ROUTES({ pathname });
+        };
+        const myNewBill = new NewBill({
+          document,
+          onNavigate,
+          store: mockStore,
+          localStorage: window.localStorage,
+        });
+
+        const spyFile = jest.spyOn(myNewBill, "handleChangeFile");
+
+        document
+          .querySelector(`input[data-testid="file"]`)
+          .addEventListener("change", spyFile);
+        console.log("Store ---------->", myNewBill.store);
+        const file = new File(["hello"], "hello.png", { type: "image/png" });
+        userEvent.upload(screen.getByTestId("file"), file);
+        expect(spyFile).toHaveBeenCalled();
+        expect(screen.getByTestId("file").files[0]).toBe(file);
       });
-
-      const spyFile = jest.spyOn(myNewBill, "handleChangeFile");
-
-      document
-        .querySelector(`input[data-testid="file"]`)
-        .addEventListener("change", spyFile);
-      console.log("Store ---------->", myNewBill.store);
-      const file = new File(["hello"], "hello.png", { type: "image/png" });
-      userEvent.upload(screen.getByTestId("file"), file);
-      expect(spyFile).toHaveBeenCalled();
-      expect(screen.getByTestId("file").files[0]).toBe(file);
     });
   });
 });
